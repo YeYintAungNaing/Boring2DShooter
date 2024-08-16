@@ -4,7 +4,7 @@
 // collision detection for arc
 // shield ablility ??
 // game over screen
-// seperate files in each folder zzzzzzzzzzzzzz
+
 // more abilities
 // abilites info
 // improve start screen 
@@ -130,7 +130,7 @@ function generateEnemies() {
                 y : Math.sin(angle)  
             }
             const color = `hsl(${Math.random() * 360}, 50%, 50%)`
-            enemies.push(new Enemy(x, y, 25, color, velocity))
+            enemies.push(new Enemy(x, y, 40, color, velocity))
         }
         //console.log(enemyProjectiles)
         //console.log(projectiles)
@@ -213,8 +213,8 @@ addEventListener('click', (e) => {    // player shooting
     )
     //console.log(e.clientX, e.clientY)
     const velocity = {
-        x : Math.cos(angle) * 5,
-        y : Math.sin(angle) * 5
+        x : Math.cos(angle) * 7,
+        y : Math.sin(angle) * 7
     }
     //console.log(velocity)
 
@@ -258,16 +258,13 @@ function generateSpreadingProjectiles(mouseX, mouseY) {          // 'F' ability
     const numProjectiles = 10;  // Number of projectiles in the wave
 
     for (let i = 0; i < numProjectiles; i++) {
-        // Calculate the angle for each projectile
-        const angle = angleToCursor - spreadAngle / 2 + (spreadAngle / numProjectiles) * i;
+        const angle = angleToCursor - spreadAngle / 2 + (spreadAngle / numProjectiles) * i; // Calculating the angle for each projectile
 
-        // Create velocity for each projectile
         const velocity = {
-            x: Math.cos(angle) * 3,  // Adjust speed as necessary
+            x: Math.cos(angle) * 3,  
             y: Math.sin(angle) * 3
         };
 
-        // Create the projectile
         projectiles.push(new Projectile(player.x, player.y, 5, 'white', velocity));
     }
     //console.log(projectiles)
@@ -276,6 +273,10 @@ function generateSpreadingProjectiles(mouseX, mouseY) {          // 'F' ability
 
 document.addEventListener('keydown', (e) => {             // 'F' ability
     if (e.key === 'f' || e.key === 'F') {
+        if (player.energy < 20) {
+            return
+        }
+        player.energy -= 20
         document.addEventListener('mousemove', (event) => {
             const mouseX = event.clientX;
             const mouseY = event.clientY;
@@ -295,12 +296,12 @@ function generateExpandingArc(mouseX, mouseY) {           // "q" ability
     const arc = new ExpandingArc(
         player.x,             
         player.y,
-        14,                   // Initial radius
+        18,                   // Initial radius
         angle - Math.PI / 8,  // Start angle (for arc segment)
         angle + Math.PI / 8,  // End angle (for arc segment)
         'white',             // Color of the arc
         velocity,
-        1.5                   // Growth rate of the arc's radius
+        1.5                  // Growth rate of the arc's radius
     );
     arcs.push(arc);
 }
@@ -309,6 +310,10 @@ function generateExpandingArc(mouseX, mouseY) {           // "q" ability
 
 document.addEventListener('keydown', (e) => {              // "q" ability
     if (e.key === 'q' || e.key === 'Q') {
+        if (player.energy < 20) {
+            return
+        }
+        player.energy -= 20
         document.addEventListener('mousemove', (event) => {
             const mouseX = event.clientX;
             const mouseY = event.clientY;
@@ -319,6 +324,7 @@ document.addEventListener('keydown', (e) => {              // "q" ability
 
 
 function animate() {
+    animationState = requestAnimationFrame(animate)
     c.fillStyle = 'rgba(0, 0, 0, 0.1)'
     c.fillRect(0, 0, canvas.width, canvas.height)
     drawHUD()
@@ -361,7 +367,7 @@ function animate() {
             player.health -= 5 * stageLevel
             if (player.health < 0) {
                 cancelAnimationFrame(animationState)
-                console.log('lost')
+                //console.log('lost')
             }
         }
         if (projectile_.x < 0 || projectile_.x > canvas.width || projectile_.y < 0 || projectile_.y > canvas.height) {
@@ -372,10 +378,7 @@ function animate() {
     if (arcs.length > 0) {
         arcs.forEach((arc, index) => {
             arc.update();
-
-            // Remove arcs that have grown too large or moved off-screen
             if (
-                arc.radius > 1000 ||  // Arbitrary value to remove large arcs
                 arc.x < 0 ||
                 arc.x > canvas.width ||
                 arc.y < 0 ||
@@ -383,9 +386,22 @@ function animate() {
             ) {
                 arcs.splice(index, 1);
             }
+
+            enemies.forEach((enemy, enemyIndex) => {
+                if (arc.isCollidingWith(enemy)) {
+                    enemies.splice(enemyIndex, 1);
+                    playerScore += 10
+                    player.energy += 5    
+                }
+            });
+
+
         })
     }
-    animationState = requestAnimationFrame(animate)
+}
+
+function drawGameOver() {
+    pass
 }
 
 
@@ -394,6 +410,11 @@ function startGame() {
     animate()
     generateEnemies()
     startTimer()
+}
+
+function restartGame() {
+    elapsedTime = 0
+
 }
 
 
